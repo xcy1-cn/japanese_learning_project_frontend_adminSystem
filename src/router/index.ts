@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import LoginView from "../views/login/LoginView.vue";
-import AdminLayout from "../views/layout/AdminLayout.vue";
-import DashboardView from "../views/dashboard/DashboardView.vue";
+import LoginView from "@/views/login/LoginView.vue";
+import AdminLayout from "@/views/layout/AdminLayout.vue";
+import DashboardView from "@/views/dashboard/DashboardView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
