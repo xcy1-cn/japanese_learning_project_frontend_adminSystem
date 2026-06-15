@@ -28,51 +28,99 @@ const router = createRouter({
         {
           path: "dashboard",
           component: DashboardView,
+          meta: {
+            roles: ["admin", "author"],
+          },
         },
         {
           path: "articles",
           component: ArticleListView,
+          meta: {
+            roles: ["admin", "author"],
+          },
         },
         {
           path: "articles/:articleId/sentences",
           component: ArticleSentenceView,
+          meta: {
+            roles: ["admin", "author"],
+          },
         },
         {
           path: "sentences",
           component: SentenceListView,
+          meta: {
+            roles: ["admin", "author"],
+          },
         },
         {
           path: "vocabularies",
           component: VocabularyListView,
+          meta: {
+            roles: ["admin", "author"],
+          },
         },
         {
           path: "grammar-points",
           component: GrammarListView,
+          meta: {
+            roles: ["admin", "author"],
+          },
         },
         {
           path: "questions",
           component: QuestionListView,
+          meta: {
+            roles: ["admin"],
+          },
         },
       ],
     },
   ],
 });
 
-export default router;
-
-
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const token = localStorage.getItem("admin_token");
+  const role = localStorage.getItem("admin_role")?.trim().toLowerCase();
 
+  // 未登录访问非登录页
   if (to.path !== "/login" && !token) {
-    next("/login");
-    return;
+    return "/login";
   }
 
+  // 已登录访问登录页
   if (to.path === "/login" && token) {
-    next("/dashboard");
-    return;
+    return "/dashboard";
   }
 
-  next();
+  // 登录后如果没有 role，说明登录状态异常，清空后重新登录
+  if (token && !role) {
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_username");
+    localStorage.removeItem("admin_role");
+
+    return "/login";
+  }
+
+  const roles = to.meta.roles as string[] | undefined;
+
+  // 当前路由需要角色权限
+  if (roles && roles.length > 0) {
+    const normalizedRoles = roles.map((item) => item.toLowerCase());
+
+    const hasPermission = role && normalizedRoles.includes(role);
+
+    if (!hasPermission) {
+      // 避免正在 /dashboard 时继续重定向到 /dashboard
+      if (to.path !== "/dashboard") {
+        return "/dashboard";
+      }
+
+      return false;
+    }
+  }
+
+  return true;
 });
+
+export default router;
