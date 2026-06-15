@@ -5,16 +5,18 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
+export interface LoginUserInfo {
   token: string;
   username: string;
   role: string;
 }
 
-export const loginApi = (data: LoginRequest) => {
-  return request.post<LoginResponse>("/auth/login", data);
-};
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
 
-export const getMeApi = () => {
-  return request.get("/auth/me");
+export const loginApi = (data: LoginRequest) => {
+  return request.post<ApiResponse<LoginUserInfo>>("/Auth/login", data);
 };

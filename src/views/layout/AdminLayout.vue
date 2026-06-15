@@ -30,14 +30,34 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRouter } from "vue-router";
+import { ElMessageBox, ElMessage } from "element-plus";
 
-const router = useRouter()
+const router = useRouter();
 
-const handleLogout = () => {
-    localStorage.removeItem('admin_token')
-    router.push('/login')
-}
+const handleLogout = async () => {
+    try {
+        await ElMessageBox.confirm(
+            "确定要退出后台管理系统吗？",
+            "退出确认",
+            {
+                confirmButtonText: "确定退出",
+                cancelButtonText: "取消",
+                type: "warning",
+            },
+        );
+
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_username");
+        localStorage.removeItem("admin_role");
+
+        ElMessage.success("已退出登录");
+
+        router.replace("/login");
+    } catch {
+        // 用户点击取消，不做处理
+    }
+};
 </script>
 
 <style scoped>
