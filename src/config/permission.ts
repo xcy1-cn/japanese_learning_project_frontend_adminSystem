@@ -37,6 +37,11 @@ export const menuList: MenuItem[] = [
     title: "题目管理",
     roles: ["admin"],
   },
+  {
+    path: "/import",
+    title: "批量导入",
+    roles: ["admin"],
+  },
 ];
 
 export const hasRolePermission = (

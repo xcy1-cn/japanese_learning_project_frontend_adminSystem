@@ -9,6 +9,7 @@ import SentenceListView from "@/views/sentence/SentenceListView.vue";
 import VocabularyListView from "@/views/vocabulary/VocabularyListView.vue";
 import GrammarListView from "@/views/grammar/GrammarListView.vue";
 import QuestionListView from "@/views/question/QuestionListView.vue";
+import ImportView from "@/views/import/ImportView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -70,6 +71,13 @@ const router = createRouter({
         {
           path: "questions",
           component: QuestionListView,
+          meta: {
+            roles: ["admin"],
+          },
+        },
+        {
+          path: "import",
+          component: ImportView,
           meta: {
             roles: ["admin"],
           },
