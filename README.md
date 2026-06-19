@@ -1,507 +1,182 @@
-# Japanese Learning Admin Frontend
+# Japanese Learning Platform｜Admin Frontend
 
-## 项目简介
+`frontend-admin` 是 Japanese Learning Platform 的后台管理端，基于 Vue3、TypeScript、Element Plus、Pinia、Vue Router 和 Axios 开发。
 
-Japanese Learning Admin Frontend 是一个基于 **Vue3 + TypeScript + Element Plus** 开发的日语学习平台后台管理系统。
-
-该后台系统用于管理日语学习平台中的核心学习内容，包括文章、句子、词汇、语法点和题目。前端通过 Axios 调用 ASP.NET Core Web API 后端接口，并使用 JWT Token 实现后台登录鉴权。
-
-当前项目已经完成后台管理端的主要功能闭环，包括：
-
-* 登录鉴权
-* 角色权限控制
-* Dashboard 数据统计
-* 文章管理
-* 句子管理
-* 词汇管理
-* 语法管理
-* 题目管理
-* 句子与词汇 / 语法点的多对多关联管理
-
----
+该系统用于管理日语学习平台的核心内容数据，包括文章、句子、词汇、语法点、题目，以及句子与词汇、句子与语法点之间的关联关系。同时后台支持 Excel 批量导入功能，用于批量维护词汇、语法点和题目数据。
 
 ## 技术栈
 
-### 前端
-
-* Vue 3
+* Vue3
 * TypeScript
 * Vite
 * Vue Router
+* Pinia
 * Axios
 * Element Plus
 * ECharts
-* vue-echarts
-* Sass
-* normalize.css
 
-### 后端
+## 项目功能
 
-本项目对应后端为：
-
-* ASP.NET Core Web API
-* Entity Framework Core
-* MySQL
-* JWT Authentication
-* RESTful API
-* Swagger API Docs
-
----
-
-## 核心功能
-
-### 1. 登录与鉴权
+### 登录与权限
 
 * 管理员登录
-* JWT Token 存储
+* JWT Token 本地保存
 * Axios 请求拦截器自动携带 Token
 * 路由守卫
-* 未登录自动跳转登录页
-* 已登录访问登录页自动跳转 Dashboard
-* 退出登录清理本地登录信息
+* 角色权限控制
 
-登录成功后，前端会保存：
+  * `admin`：完整后台权限
+  * `author`：文章、句子、词汇、语法点相关权限
 
-```txt
-admin_token
-admin_username
-admin_role
-```
+### Dashboard
 
----
+* 文章数量统计
+* 句子数量统计
+* 词汇数量统计
+* 语法点数量统计
+* 题目数量统计
+* ECharts 数据展示
 
-### 2. 角色权限控制
-
-系统根据登录接口返回的 `role` 控制后台菜单和路由访问权限。
-
-当前角色划分：
-
-```txt
-admin
-- 拥有最高权限
-- 可访问和操作全部功能
-
-author
-- 可访问文章、句子、词汇、语法相关功能
-- 不可访问题目管理
-```
-
-前端权限控制包括：
-
-* 菜单级权限控制
-* 路由级权限控制
-* 登录 role 统一小写处理
-* 无权限访问时自动跳转 Dashboard
-
-说明：前端权限用于控制页面访问体验，真正的接口安全仍需要后端通过 `[Authorize(Roles = "...")]` 进行限制。
-
----
-
-### 3. Axios 请求封装
-
-项目使用统一的 `request.ts` 封装 Axios。
-
-已实现：
-
-* 统一 baseURL
-* 请求自动携带 JWT Token
-* 401 登录失效处理
-* 403 权限不足提示
-* 404 资源不存在提示
-* 500 服务器异常提示
-* 请求超时提示
-* 后端未启动 / 网络异常提示
-
-当前环境变量配置：
-
-```env
-VITE_API_BASE_URL=http://localhost:5251/api
-```
-
-注意：因为 `baseURL` 已经包含 `/api`，所以前端接口请求中不再重复写 `/api`。
-
-正确示例：
-
-```ts
-request.get("/Article");
-request.post("/Auth/login", data);
-request.get("/Sentence");
-request.get("/Vocabulary");
-```
-
-错误示例：
-
-```ts
-request.get("/api/Article");
-request.post("/api/Auth/login", data);
-```
-
----
-
-### 4. Dashboard 数据统计
-
-Dashboard 首页使用 ECharts 展示后台数据概览。
-
-当前统计内容：
-
-* 文章数量
-* 句子数量
-* 词汇数量
-* 语法点数量
-* 题目数量
-
-当前实现方式：
-
-```txt
-GET /Article?page=1&pageSize=1
-GET /Sentence?page=1&pageSize=1
-GET /Vocabulary?page=1&pageSize=1
-GET /GrammarPoint?page=1&pageSize=1
-GET /Question?page=1&pageSize=1
-```
-
-通过分页接口返回的 `total` 字段获取各模块数据总量。
-
-Dashboard 包含：
-
-* 统计卡片
-* ECharts 柱状图
-* 刷新数据按钮
-
----
-
-## 业务功能模块
-
-### 1. 文章管理 Article
-
-功能：
+### 文章管理
 
 * 文章列表
 * 关键词搜索
 * 等级筛选
 * 分类筛选
-* 分页
+* 分页查询
 * 新增文章
 * 编辑文章
 * 删除文章
-* 进入文章下句子管理
+* 查看文章下的句子
 
-接口：
+### 句子管理
 
-```txt
-GET    /Article
-GET    /Article/{id}
-POST   /Article
-PUT    /Article/{id}
-DELETE /Article/{id}
-GET    /Article/{id}/sentences
-```
-
----
-
-### 2. 文章下句子管理 Article -> Sentence
-
-功能：
-
-* 查看指定文章下的句子
-* 按 `orderIndex` 展示句子顺序
+* 句子列表
+* 根据文章 ID 筛选句子
 * 新增句子
 * 编辑句子
 * 删除句子
-* 返回文章管理
-* 关联词汇
-* 关联语法
+* 句子排序
+* 句子详情查看
+* 句子关联词汇
+* 取消句子词汇关联
+* 句子关联语法点
+* 取消句子语法点关联
 
-说明：
-
-文章下句子管理主要用于在文章上下文中维护句子内容，以及处理句子与词汇、语法点之间的关联关系。
-
----
-
-### 3. 全局句子管理 Sentence
-
-功能：
-
-* 查看全部句子
-* 按关键词搜索
-* 按 AID 筛选
-* 分页
-* 新增句子
-* 编辑句子
-* 删除句子
-
-接口：
-
-```txt
-GET    /Sentence
-GET    /Sentence/{id}
-GET    /Sentence/{id}/detail
-POST   /Sentence
-PUT    /Sentence/{id}
-DELETE /Sentence/{id}
-```
-
----
-
-### 4. 词汇管理 Vocabulary
-
-功能：
+### 词汇管理
 
 * 词汇列表
-* 按单词 / 读音 / 含义搜索
-* 按等级筛选
-* 按词性筛选
-* 分页
+* 关键词搜索
+* 等级筛选
+* 词性筛选
 * 新增词汇
 * 编辑词汇
 * 删除词汇
 
-接口：
-
-```txt
-GET    /Vocabulary
-GET    /Vocabulary/{id}
-POST   /Vocabulary
-PUT    /Vocabulary/{id}
-DELETE /Vocabulary/{id}
-```
-
-字段：
-
-```txt
-id
-word
-reading
-meaning
-partOfSpeech
-exampleSentence
-level
-createdAt
-```
-
----
-
-### 5. 语法管理 GrammarPoint
-
-功能：
+### 语法点管理
 
 * 语法点列表
-* 按关键词搜索
-* 按等级筛选
-* 分页
+* 关键词搜索
+* 等级筛选
 * 新增语法点
 * 编辑语法点
 * 删除语法点
 
-接口：
-
-```txt
-GET    /GrammarPoint
-GET    /GrammarPoint/{id}
-POST   /GrammarPoint
-PUT    /GrammarPoint/{id}
-DELETE /GrammarPoint/{id}
-```
-
-字段：
-
-```txt
-id
-title
-explanation
-structure
-example
-level
-createdAt
-```
-
----
-
-### 6. 题目管理 Question
-
-功能：
+### 题目管理
 
 * 题目列表
-* 按题型筛选
-* 按关键词搜索
-* 分页
+* 题目类型筛选
+* 关键词搜索
 * 新增题目
 * 编辑题目
 * 删除题目
+* 支持关联文章 ID
+* 支持关联句子 ID
 
-接口：
+### Excel 批量导入
 
-```txt
-GET    /Question
-GET    /Question/{id}
-POST   /Question
-PUT    /Question/{id}
-DELETE /Question/{id}
+后台支持三类 Excel 数据导入：
+
+* Vocabulary 词汇导入
+* GrammarPoint 语法点导入
+* Question 题目导入
+
+页面功能包括：
+
+* 导入类型选择
+* `.xlsx` 文件上传
+* Excel 模板说明
+* Excel 模板下载
+* 导入结果展示
+* 成功数量展示
+* 失败行数展示
+* 错误行详情表格展示
+
+导入结果示例：
+
+```text
+成功导入 2 条，失败 1 行
 ```
 
-字段：
+错误详情表格：
 
-```txt
-id
-articleId
-sentenceId
-type
-stem
-optionA
-optionB
-optionC
-optionD
-answer
-explanation
-level
-createdAt
+```text
+行号 | 字段 | 错误原因
 ```
-
-当前题目管理仅 admin 可访问。
-
----
-
-### 7. 句子关联词汇 / 语法点
-
-当前系统支持句子与词汇、语法点之间的多对多关系管理。
-
-数据库关系：
-
-```txt
-Sentences N - N Vocabularies
-Sentences N - N GrammarPoints
-```
-
-中间表：
-
-```txt
-SentenceVocabularies
-- SentenceId
-- VocabularyId
-
-SentenceGrammarPoints
-- SentenceId
-- GrammarPointId
-```
-
-关联词汇接口：
-
-```txt
-POST   /Sentence/{sentenceId}/vocabularies/{vocabularyId}
-DELETE /Sentence/{sentenceId}/vocabularies/{vocabularyId}
-```
-
-关联语法接口：
-
-```txt
-POST   /Sentence/{sentenceId}/grammar-points/{grammarPointId}
-DELETE /Sentence/{sentenceId}/grammar-points/{grammarPointId}
-```
-
-句子详情接口：
-
-```txt
-GET /Sentence/{id}/detail
-```
-
-该接口用于返回当前句子的详情，以及已关联的词汇和语法点。
-
-前端功能：
-
-* 查看当前句子的已关联词汇
-* 查看当前句子的已关联语法
-* 从可关联词汇列表中添加关联
-* 从可关联语法列表中添加关联
-* 移除已关联词汇
-* 移除已关联语法
-* 已关联项目会自动从可关联列表中剔除
-
----
-
-## 数据展示命名规范
-
-为方便后台表格阅读，前端表格中统一使用以下简写：
-
-| 数据字段                             | 前端显示 |
-| -------------------------------- | ---- |
-| Article Id / ArticleId           | AID  |
-| Sentence Id / SentenceId         | SID  |
-| Vocabulary Id / VocabularyId     | VID  |
-| GrammarPoint Id / GrammarPointId | GID  |
-| Question Id / QuestionId         | QID  |
-
-注意：后端接口字段名仍然保持原始命名，例如 `articleId`、`sentenceId`、`id`。这里只修改前端表格显示文案。
-
----
 
 ## 项目目录结构
 
-```txt
-src
-├── api
-│   ├── request.ts
-│   ├── auth.ts
-│   ├── dashboard.ts
-│   ├── article.ts
-│   ├── sentence.ts
-│   ├── vocabulary.ts
-│   ├── grammar.ts
-│   └── question.ts
-│
-├── config
-│   └── permission.ts
-│
-├── router
-│   └── index.ts
-│
-├── views
-│   ├── login
-│   │   └── LoginView.vue
-│   │
-│   ├── layout
-│   │   └── AdminLayout.vue
-│   │
-│   ├── dashboard
-│   │   └── DashboardView.vue
-│   │
-│   ├── article
-│   │   ├── ArticleListView.vue
-│   │   └── ArticleSentenceView.vue
-│   │
-│   ├── sentence
-│   │   └── SentenceListView.vue
-│   │
-│   ├── vocabulary
-│   │   └── VocabularyListView.vue
-│   │
-│   ├── grammar
-│   │   └── GrammarListView.vue
-│   │
-│   └── question
-│       └── QuestionListView.vue
-│
-├── styles
-│   └── index.scss
-│
-├── App.vue
-└── main.ts
+```text
+frontend-admin
+├── public
+│   └── templates
+│       ├── vocabulary-template.xlsx
+│       ├── grammar-point-template.xlsx
+│       └── question-template.xlsx
+├── src
+│   ├── api
+│   │   ├── auth.ts
+│   │   ├── request.ts
+│   │   ├── import.ts
+│   │   └── ...
+│   ├── router
+│   │   └── index.ts
+│   ├── stores
+│   ├── views
+│   │   ├── login
+│   │   ├── layout
+│   │   ├── dashboard
+│   │   ├── article
+│   │   ├── sentence
+│   │   ├── vocabulary
+│   │   ├── grammar-point
+│   │   ├── question
+│   │   └── import
+│   ├── App.vue
+│   └── main.ts
+├── package.json
+└── README.md
 ```
 
----
+## 环境变量
 
-## 环境变量配置
-
-在项目根目录创建 `.env.development`：
+在项目根目录创建 `.env` 文件：
 
 ```env
 VITE_API_BASE_URL=http://localhost:5251/api
 ```
 
-说明：
+如果后端运行在局域网其他电脑上，可以改为：
 
-当前 `VITE_API_BASE_URL` 已经包含 `/api`，所以前端 API 请求路径中不需要再重复写 `/api`。
+```env
+VITE_API_BASE_URL=http://后端电脑IP:5251/api
+```
 
----
+例如：
+
+```env
+VITE_API_BASE_URL=http://192.168.1.107:5251/api
+```
 
 ## 安装依赖
 
@@ -509,13 +184,11 @@ VITE_API_BASE_URL=http://localhost:5251/api
 pnpm install
 ```
 
-或者：
+或：
 
 ```bash
 npm install
 ```
-
----
 
 ## 启动项目
 
@@ -523,7 +196,7 @@ npm install
 pnpm dev
 ```
 
-或者：
+或：
 
 ```bash
 npm run dev
@@ -531,152 +204,152 @@ npm run dev
 
 默认访问地址：
 
-```txt
+```text
 http://localhost:5173
 ```
 
----
+## 后端接口依赖
 
-## 打包项目
+后台管理端依赖 ASP.NET Core Web API 后端服务。
 
-```bash
-pnpm build
+默认后端地址：
+
+```text
+http://localhost:5251/api
 ```
 
-或者：
+主要接口模块：
 
-```bash
-npm run build
+```text
+/api/Auth
+/api/Article
+/api/Sentence
+/api/Vocabulary
+/api/GrammarPoint
+/api/Question
+/api/Import
 ```
 
----
+## Excel 导入说明
 
-## 登录账号
+### Vocabulary 模板
 
-开发测试账号示例：
-
-```txt
-username: admin
-password: 123456
-role: admin
+```text
+Word | Reading | Meaning | PartOfSpeech | Level
 ```
 
-```txt
-username: author
-password: 123456
-role: author
+### GrammarPoint 模板
+
+```text
+Title | Explanation | Structure | Example | Level
 ```
 
-具体账号以数据库 `AdminUsers` 表为准。
+### Question 模板
 
----
-
-## 数据库结构概览
-
-当前数据库核心表：
-
-```txt
-AdminUsers
-Articles
-Sentences
-Vocabularies
-GrammarPoints
-Questions
-SentenceVocabularies
-SentenceGrammarPoints
-__EFMigrationsHistory
+```text
+ArticleId | SentenceId | Type | Stem | OptionA | OptionB | OptionC | OptionD | Answer | Explanation | Level
 ```
 
-核心关系：
+上传接口：
 
-```txt
-Articles 1 - N Sentences
-Articles 1 - N Questions
-Sentences 1 - N Questions
-Sentences N - N Vocabularies
-Sentences N - N GrammarPoints
+```http
+POST /api/Import/vocabularies
+POST /api/Import/grammar-points
+POST /api/Import/questions
 ```
 
----
+上传格式：
 
-## 当前完成状态
-
-```txt
-已完成：
-- 登录功能
-- 退出功能
-- JWT Token 管理
-- Axios 请求封装
-- 全局错误处理
-- 路由守卫
-- role 权限控制
-- 后台 Layout
-- Dashboard 数据统计
-- ECharts 图表展示
-- 文章管理 CRUD
-- 文章下句子管理 CRUD
-- 全局句子管理 CRUD
-- 词汇管理 CRUD
-- 语法管理 CRUD
-- 题目管理 CRUD
-- 句子关联词汇
-- 句子关联语法
-- 句子移除词汇关联
-- 句子移除语法关联
+```text
+Content-Type: multipart/form-data
+form-data key: file
+file type: .xlsx
 ```
 
----
+## 核心实现点
 
-## 项目亮点
+### 1. Axios 统一封装
 
-### 1. 前后端分离架构
+项目通过 Axios 请求拦截器统一携带 JWT Token：
 
-前端 Vue3 管理后台调用 ASP.NET Core Web API，实现完整后台管理系统。
-
-### 2. JWT 登录鉴权
-
-登录后保存 Token，请求拦截器自动添加：
-
-```txt
+```text
 Authorization: Bearer token
 ```
 
-### 3. 基于角色的权限控制
+响应拦截器统一返回后端 `ApiResponse<T>` 结构，前端页面可以统一读取：
 
-根据后端返回的 `role` 控制菜单和路由访问。
-
-当前支持：
-
-```txt
-admin
-author
+```ts
+res.data
 ```
 
-### 4. RESTful CRUD
+### 2. 路由守卫
 
-文章、句子、词汇、语法点、题目均使用标准 RESTful 接口完成增删改查。
+后台页面需要登录后访问。未登录用户访问后台页面时，会自动跳转到登录页。
 
-### 5. 多表关系管理
+### 3. Excel 上传控制
 
-支持句子与词汇、句子与语法点之间的多对多关联关系管理。
+Excel 上传使用 Element Plus `el-upload`，并设置：
 
-### 6. Dashboard 数据可视化
-
-使用 ECharts 展示文章、句子、词汇、语法点、题目数量统计。
-
-### 7. TypeScript 类型约束
-
-API 请求参数、响应结果、业务实体均定义 TypeScript 类型，提高代码可维护性。
-
-### 8. 统一错误处理
-
-Axios 响应拦截器统一处理：
-
-```txt
-401
-403
-404
-500
-请求超时
-后端未启动
+```vue
+:auto-upload="false"
 ```
+
+这样可以让用户先选择导入类型，再点击“开始导入”按钮手动提交。
+
+### 4. FormData 文件上传
+
+Excel 文件通过 `FormData` 提交：
+
+```ts
+const formData = new FormData();
+formData.append("file", file);
+```
+
+其中 `file` 必须与后端 `IFormFile file` 参数名一致。
+
+### 5. 模板下载
+
+模板 Excel 文件放在：
+
+```text
+public/templates
+```
+
+Vite 会将 `public` 目录直接映射为网站根路径。
+
+例如：
+
+```text
+public/templates/vocabulary-template.xlsx
+```
+
+访问路径为：
+
+```text
+/templates/vocabulary-template.xlsx
+```
+
+## 项目亮点
+
+* 完整后台内容管理系统
+* Vue3 + TypeScript 前端工程化实践
+* Element Plus 表格、表单、上传组件综合使用
+* JWT 登录鉴权与路由守卫
+* Axios 请求/响应统一封装
+* 文章、句子、词汇、语法点、题目 CRUD
+* 句子与词汇、语法点多对多关联管理
+* Excel 批量导入页面
+* Excel 模板下载
+* 导入错误行可视化展示
+* Dashboard 数据统计与图表展示
+
+## 后续优化计划
+
+* 增加更细粒度的角色权限控制
+* 增加导入历史记录页面
+* 增加 Excel 导入进度条
+* 增加大文件上传提示
+* 增加更多表单校验规则
+* 优化移动端适配
+* 增加单元测试和组件测试
+* 与后端导入日志表联动
